@@ -36,7 +36,7 @@ claude
 
 Tell Claude to install the MTHDS skills marketplace:
 ```bash
-/plugin marketplace add mthds-ai/skills
+/plugin marketplace add mthds-ai/skills-sandbox
 ```
 
 then install the MTHDS skills plugin:
