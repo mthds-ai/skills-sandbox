@@ -111,7 +111,7 @@ The `/inputs` subdirectory is only created when there are actual data files to s
 Extract the input template from the method:
 
 ```bash
-mthds-agent <runner> inputs bundle <bundle.mthds> -L <bundle-dir>/ [--pipe specific_pipe]
+mthds-agent inputs bundle <bundle.mthds> -L <bundle-dir>/ [--pipe specific_pipe]
 ```
 
 **Output format:**
@@ -367,7 +367,7 @@ First, create an input file (e.g., `<output_dir>/image_request.json`):
 
 Then run:
 ```bash
-mthds-agent <runner> run bundle pipelex/builder/synthetic_inputs/synthesize_image.mthds --inputs <output_dir>/image_request.json
+mthds-agent run bundle pipelex/builder/synthetic_inputs/synthesize_image.mthds --inputs <output_dir>/image_request.json
 ```
 
 **Image Categories:**
@@ -552,10 +552,10 @@ Then offer to run:
 
 ```bash
 # Dry run with the prepared inputs (directory mode auto-detects bundle, inputs, library dir)
-mthds-agent <runner> run bundle <bundle-dir>/ --dry-run
+mthds-agent run bundle <bundle-dir>/ --dry-run
 
 # Full run (uses actual AI/extraction models)
-mthds-agent <runner> run bundle <bundle-dir>/
+mthds-agent run bundle <bundle-dir>/
 ```
 
 ---
@@ -632,7 +632,7 @@ mthds-agent <runner> run bundle <bundle-dir>/
 **Method**: Haiku pipeline expecting `theme: Text`
 
 ```bash
-mthds-agent <runner> inputs bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
+mthds-agent inputs bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
 ```
 
 Save the `inputs` from the output directly to `mthds-wip/pipeline_01/inputs.json`.

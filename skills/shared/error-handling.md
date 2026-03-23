@@ -60,7 +60,7 @@ mthds-agent --log-level debug pipelex validate bundle bundle.mthds -L dir/
 
 ## Validation Errors
 
-When `mthds-agent <runner> validate bundle` reports a `ValidateBundleError`, the JSON includes a `validation_errors` array:
+When `mthds-agent validate bundle` reports a `ValidateBundleError`, the JSON includes a `validation_errors` array:
 
 ```json
 {
@@ -102,8 +102,8 @@ These indicate environment issues, not .mthds file problems. **Cannot be fixed b
 
 | Error Type | Meaning | Recovery |
 |------------|---------|----------|
-| `PipeOperatorModelChoiceError` | Model preset doesn't resolve to an available model | Run `mthds-agent <runner> doctor` — check routing configuration |
-| `PipeOperatorModelAvailabilityError` | Model is configured but not reachable (missing API key, service down) | Run `mthds-agent <runner> doctor` — verify API keys and model availability |
+| `PipeOperatorModelChoiceError` | Model preset doesn't resolve to an available model | Run `mthds-agent doctor` — check routing configuration |
+| `PipeOperatorModelAvailabilityError` | Model is configured but not reachable (missing API key, service down) | Run `mthds-agent doctor` — verify API keys and model availability |
 
 Example output:
 ```json
@@ -112,7 +112,7 @@ Example output:
   "error_type": "PipeOperatorModelChoiceError",
   "error_domain": "config",
   "message": "No model found for preset '$writing-creative'",
-  "hint": "Run 'mthds-agent <runner> doctor' to check available models and routing configuration",
+  "hint": "Run 'mthds-agent doctor' to check available models and routing configuration",
   "pipe_code": "summarize",
   "model_type": "llm",
   "model_choice": "$writing-creative"
@@ -136,15 +136,15 @@ Pipelex loads `.mthds` files into a flat namespace. **Always use directory mode 
 
 ```bash
 # ALWAYS use -L for validation (isolates from other bundles)
-mthds-agent <runner> validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
+mthds-agent validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
 
 # ALWAYS use directory mode or -L for running
-mthds-agent <runner> run bundle mthds-wip/pipeline_01/ --dry-run --mock-inputs
+mthds-agent run bundle mthds-wip/pipeline_01/ --dry-run --mock-inputs
 ```
 
 When a bundle references pipes/concepts from other domains, add multiple `-L` flags:
 
 ```bash
 # Load the bundle's directory AND shared pipes
-mthds-agent <runner> validate bundle my_bundle.mthds -L ./my_bundle_dir/ -L ./shared_pipes/
+mthds-agent validate bundle my_bundle.mthds -L ./my_bundle_dir/ -L ./shared_pipes/
 ```

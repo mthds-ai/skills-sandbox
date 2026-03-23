@@ -89,7 +89,7 @@ Detailed examples, ASCII diagrams, and CLI commands for each phase of the manual
 
 ### PipeLLM
 ```bash
-mthds-agent <runner> pipe --spec '{
+mthds-agent pipe --spec '{
   "type": "PipeLLM",
   "pipe_code": "summarize_document",
   "description": "Summarize document content",
@@ -102,7 +102,7 @@ mthds-agent <runner> pipe --spec '{
 
 ### PipeSequence
 ```bash
-mthds-agent <runner> pipe --spec '{
+mthds-agent pipe --spec '{
   "type": "PipeSequence",
   "pipe_code": "process_invoice",
   "description": "Full invoice processing",
@@ -117,7 +117,7 @@ mthds-agent <runner> pipe --spec '{
 
 ### PipeBatch
 ```bash
-mthds-agent <runner> pipe --spec '{
+mthds-agent pipe --spec '{
   "type": "PipeBatch",
   "pipe_code": "process_all_items",
   "description": "Process each item in list",
@@ -133,7 +133,7 @@ mthds-agent <runner> pipe --spec '{
 
 ### PipeCondition
 ```bash
-mthds-agent <runner> pipe --spec '{
+mthds-agent pipe --spec '{
   "type": "PipeCondition",
   "pipe_code": "route_by_type",
   "description": "Route based on document type",
@@ -147,7 +147,7 @@ mthds-agent <runner> pipe --spec '{
 
 ### PipeCompose — Template mode (via CLI)
 ```bash
-mthds-agent <runner> pipe --spec '{
+mthds-agent pipe --spec '{
   "type": "PipeCompose",
   "pipe_code": "format_report",
   "description": "Format final report",
@@ -181,7 +181,7 @@ version = "1.0"  # Static value
 
 ### PipeParallel
 ```bash
-mthds-agent <runner> pipe --spec '{
+mthds-agent pipe --spec '{
   "type": "PipeParallel",
   "pipe_code": "analyze_all",
   "description": "Run analyses in parallel",
@@ -200,7 +200,7 @@ mthds-agent <runner> pipe --spec '{
 
 ### PipeExtract
 ```bash
-mthds-agent <runner> pipe --spec '{
+mthds-agent pipe --spec '{
   "type": "PipeExtract",
   "pipe_code": "extract_pages",
   "description": "Extract text from document",
@@ -212,7 +212,7 @@ mthds-agent <runner> pipe --spec '{
 
 ### PipeExtract (Web Page)
 ```bash
-mthds-agent pipelex pipe --spec '{
+mthds-agent pipe --spec '{
   "type": "PipeExtract",
   "pipe_code": "extract_web_page",
   "description": "Extract content from web page",
@@ -224,7 +224,7 @@ mthds-agent pipelex pipe --spec '{
 
 ### PipeImgGen
 ```bash
-mthds-agent <runner> pipe --spec '{
+mthds-agent pipe --spec '{
   "type": "PipeImgGen",
   "pipe_code": "generate_image",
   "description": "Generate image from prompt",
@@ -239,7 +239,7 @@ mthds-agent <runner> pipe --spec '{
 
 ### PipeSearch
 ```bash
-mthds-agent <runner> pipe --spec '{
+mthds-agent pipe --spec '{
   "type": "PipeSearch",
   "pipe_code": "search_topic",
   "description": "Search the web for information",
@@ -250,7 +250,7 @@ mthds-agent <runner> pipe --spec '{
 }'
 
 # With optional date and domain filters:
-mthds-agent <runner> pipe --spec '{
+mthds-agent pipe --spec '{
   "type": "PipeSearch",
   "pipe_code": "search_recent_news",
   "description": "Search specific sources for recent news",
@@ -289,10 +289,10 @@ Key points:
 ### Parallel Conversion Example (multiple pipes at once)
 ```bash
 # Call all pipe commands in parallel (single response, multiple tool calls):
-mthds-agent <runner> pipe --spec '{"type": "PipeLLM", "pipe_code": "summarize", "description": "Summarize document", "inputs": {"document": "Document"}, "output": "Summary", "llm_talent": "creative-writer", "prompt": "Summarize:\n\n@document"}'
-mthds-agent <runner> pipe --spec '{"type": "PipeExtract", "pipe_code": "extract_pages", "description": "Extract text from document", "inputs": {"document": "Document"}, "output": "Page[]", "extract_talent": "pdf-basic-text-extractor"}'
-mthds-agent <runner> pipe --spec '{"type": "PipeLLM", "pipe_code": "analyze", "description": "Analyze content", "inputs": {"pages": "Page[]"}, "output": "Analysis", "llm_talent": "engineer", "prompt": "Analyze:\n\n@pages"}'
-mthds-agent <runner> pipe --spec '{"type": "PipeSequence", "pipe_code": "main_pipe_code", "description": "Main orchestration", "inputs": {"document": "Document"}, "output": "Analysis", "steps": [{"pipe": "extract_pages", "result": "pages"}, {"pipe": "analyze", "result": "analysis"}]}'
+mthds-agent pipe --spec '{"type": "PipeLLM", "pipe_code": "summarize", "description": "Summarize document", "inputs": {"document": "Document"}, "output": "Summary", "llm_talent": "creative-writer", "prompt": "Summarize:\n\n@document"}'
+mthds-agent pipe --spec '{"type": "PipeExtract", "pipe_code": "extract_pages", "description": "Extract text from document", "inputs": {"document": "Document"}, "output": "Page[]", "extract_talent": "pdf-basic-text-extractor"}'
+mthds-agent pipe --spec '{"type": "PipeLLM", "pipe_code": "analyze", "description": "Analyze content", "inputs": {"pages": "Page[]"}, "output": "Analysis", "llm_talent": "engineer", "prompt": "Analyze:\n\n@pages"}'
+mthds-agent pipe --spec '{"type": "PipeSequence", "pipe_code": "main_pipe_code", "description": "Main orchestration", "inputs": {"document": "Document"}, "output": "Analysis", "steps": [{"pipe": "extract_pages", "result": "pages"}, {"pipe": "analyze", "result": "analysis"}]}'
 ```
 
 ## Phase 8: Assemble Bundle
@@ -300,7 +300,7 @@ mthds-agent <runner> pipe --spec '{"type": "PipeSequence", "pipe_code": "main_pi
 Save concept and pipe TOML to temporary files, then assemble to stdout (returns JSON with a `toml` field):
 
 ```bash
-mthds-agent <runner> assemble \
+mthds-agent assemble \
   --domain my_domain \
   --main-pipe main_pipe_code \
   --description "Description of the method" \

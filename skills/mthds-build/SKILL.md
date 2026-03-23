@@ -196,9 +196,9 @@ Prepare JSON specs for all concepts, then convert them **in parallel** by making
 **Example** (3 concepts converted in parallel):
 ```bash
 # Call all three in parallel (single response, multiple tool calls):
-mthds-agent <runner> concept --spec '{"the_concept_code": "Invoice", "description": "A commercial invoice document", "structure": {"invoice_number": "The unique identifier", "vendor_name": {"type": "text", "description": "Vendor name", "required": true}, "total_amount": {"type": "number", "description": "Total amount", "required": true}}}'
-mthds-agent <runner> concept --spec '{"the_concept_code": "LineItem", "description": "A single line item on an invoice", "structure": {"description": "Item description", "quantity": {"type": "integer", "required": true}, "unit_price": {"type": "number", "required": true}}}'
-mthds-agent <runner> concept --spec '{"the_concept_code": "Summary", "description": "A text summary of content", "refines": "Text"}'
+mthds-agent concept --spec '{"the_concept_code": "Invoice", "description": "A commercial invoice document", "structure": {"invoice_number": "The unique identifier", "vendor_name": {"type": "text", "description": "Vendor name", "required": true}, "total_amount": {"type": "number", "description": "Total amount", "required": true}}}'
+mthds-agent concept --spec '{"the_concept_code": "LineItem", "description": "A single line item on an invoice", "structure": {"description": "Item description", "quantity": {"type": "integer", "required": true}, "unit_price": {"type": "number", "required": true}}}'
+mthds-agent concept --spec '{"the_concept_code": "Summary", "description": "A text summary of content", "refines": "Text"}'
 ```
 
 **Field types**: `text`, `integer`, `boolean`, `number`, `date`, `concept`, `list`
@@ -286,10 +286,10 @@ Check:
 
 Use **talent names** (left column) from [Talents and Presets](references/talents-and-presets.md). Do NOT use model preset names (right column, prefixed with `$` or `@`) — those are internal identifiers. For example, use `creative-writer`, not `writing-creative` or `$writing-creative`. Only look up specific model presets when the user has explicit instructions about model choice. In all cases, verify that referenced presets exist:
 ```bash
-mthds-agent <runner> models --type llm          # when structuring PipeLLM pipes
-mthds-agent <runner> models --type extract      # when structuring PipeExtract pipes
-mthds-agent <runner> models --type img_gen      # when structuring PipeImgGen pipes
-mthds-agent <runner> models --type search       # when structuring PipeSearch pipes
+mthds-agent models --type llm          # when structuring PipeLLM pipes
+mthds-agent models --type extract      # when structuring PipeExtract pipes
+mthds-agent models --type img_gen      # when structuring PipeImgGen pipes
+mthds-agent models --type search       # when structuring PipeSearch pipes
 ```
 
 Prepare JSON specs for all pipes, then convert them **in parallel** by making multiple concurrent tool calls.
@@ -319,7 +319,7 @@ For detailed CLI examples for each pipe type (PipeLLM, PipeSequence, PipeBatch, 
 3. **Save pipe TOML** from Phase 7 to `mthds-wip/<bundle_dir>/pipes.toml` using the **Write** tool
 4. **Run assemble** with file paths (not inline content):
    ```bash
-   mthds-agent <runner> assemble \
+   mthds-agent assemble \
      --domain <domain> \
      --main-pipe <main_pipe_code> \
      --description "<description>" \
@@ -343,10 +343,10 @@ Always use `-L` pointing to the bundle's own directory to avoid namespace collis
 
 ```bash
 # Validate and generate flowchart (isolated from other bundles)
-mthds-agent <runner> validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/ --graph
+mthds-agent validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/ --graph
 
 # Generate example inputs
-mthds-agent <runner> inputs bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
+mthds-agent inputs bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
 ```
 
 On success, `dry_run.html` is saved next to the bundle. The JSON output includes the path in `graph_files`.
@@ -367,7 +367,7 @@ After validation passes (Phase 9), generate the input template:
 
 ```bash
 # Input template (extracts the input schema as JSON)
-mthds-agent <runner> inputs bundle <mthds_file> -L <output_dir>/
+mthds-agent inputs bundle <mthds_file> -L <output_dir>/
 ```
 
 Replace `<mthds_file>` and `<output_dir>` with actual paths from the build output.

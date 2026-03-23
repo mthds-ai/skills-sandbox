@@ -50,7 +50,7 @@ Do not write `.mthds` files manually, do not scan for existing methods, do not d
 
 3. **Run CLI validation** (use `-L` pointing to the bundle's own directory to avoid namespace collisions; `--graph` generates a flowchart):
    ```bash
-   mthds-agent <runner> validate bundle <file>.mthds -L <bundle-directory>/ --graph
+   mthds-agent validate bundle <file>.mthds -L <bundle-directory>/ --graph
    ```
 
 4. **Parse the JSON output**:

@@ -2,9 +2,9 @@
 
 The agent CLI uses human-friendly "talent" names that map to model presets. This shields you from needing to know specific model names.
 
-> **IMPORTANT**: When using the agent CLI (`mthds-agent <runner> pipe`), always use **Talent** names (left column), never preset names (right column). Presets are internal identifiers — the CLI maps talents to presets automatically.
+> **IMPORTANT**: When using the agent CLI (`mthds-agent pipe`), always use **Talent** names (left column), never preset names (right column). Presets are internal identifiers — the CLI maps talents to presets automatically.
 
-> **Check availability**: Run `mthds-agent <runner> models` to verify which presets, aliases, and talent mappings are actually available in the current environment before referencing them in a bundle.
+> **Check availability**: Run `mthds-agent models` to verify which presets, aliases, and talent mappings are actually available in the current environment before referencing them in a bundle.
 > Use `--type` (`llm`, `extract`, `img_gen`, `search`) to filter by category and `--backend` to filter by provider.
 
 ## LLM Talents → Model Presets (reference only)

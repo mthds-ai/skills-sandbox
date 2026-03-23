@@ -103,7 +103,7 @@ Validate the `METHODS.toml` package manifest:
 mthds-agent package validate -C <pkg-dir>
 ```
 
-> **Note**: `mthds-agent package validate` validates the `METHODS.toml` package manifest. To validate `.mthds` bundle semantics, use `mthds-agent <runner> validate bundle` (see /mthds-check skill).
+> **Note**: `mthds-agent package validate` validates the `METHODS.toml` package manifest. To validate `.mthds` bundle semantics, use `mthds-agent validate bundle` (see /mthds-check skill).
 
 ## The `-C` option
 
