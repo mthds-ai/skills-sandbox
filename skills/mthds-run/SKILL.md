@@ -59,7 +59,7 @@ pipelex-agent --version
 **Then**, if `pipelex-agent` is installed, check configuration health:
 
 ```bash
-mthds-agent pipelex doctor  # outputs markdown
+mthds-agent doctor
 ```
 
 - **If the doctor reports config issues (missing backends, missing API keys)** AND the user is requesting a **live run** (not `--dry-run`): STOP. Tell the user:
@@ -74,10 +74,10 @@ mthds-agent pipelex doctor  # outputs markdown
 
 | Target | Command |
 |--------|---------|
-| Pipeline directory (recommended) | `mthds-agent pipelex run bundle <bundle-dir>/` |
-| Specific pipe in a directory | `mthds-agent pipelex run bundle <bundle-dir>/ --pipe my_pipe` |
-| Bundle file directly | `mthds-agent pipelex run bundle bundle.mthds -L <bundle-dir>/` |
-| Pipe by code from library | `mthds-agent pipelex run bundle my_pipe` |
+| Pipeline directory (recommended) | `mthds-agent run bundle <bundle-dir>/` |
+| Specific pipe in a directory | `mthds-agent run bundle <bundle-dir>/ --pipe my_pipe` |
+| Bundle file directly | `mthds-agent run bundle bundle.mthds -L <bundle-dir>/` |
+| Pipe by code from library | `mthds-agent run bundle my_pipe` |
 
 > **Directory mode** (recommended): Pass the pipeline directory as target. The CLI auto-detects `bundle.mthds`, `inputs.json`, and sets `-L` automatically — no need to specify them explicitly. This also avoids namespace collisions with other bundles.
 
@@ -96,7 +96,7 @@ If `/mthds-run` is invoked without prior input preparation in this session, perf
 Get the input schema for the target:
 
 ```bash
-mthds-agent pipelex inputs bundle bundle.mthds
+mthds-agent inputs bundle bundle.mthds
 ```
 
 **Output:**
@@ -123,7 +123,7 @@ Fill in the `content` fields with actual values. For complex inputs, use the /mt
 
 Before running, assess whether inputs are ready. This prevents runtime failures from placeholder values.
 
-**No inputs required**: If `mthds-agent pipelex inputs bundle <file>.mthds` returns an empty `inputs` object (`{}`), inputs are ready — skip to Step 3.
+**No inputs required**: If `mthds-agent inputs bundle <file>.mthds` returns an empty `inputs` object (`{}`), inputs are ready — skip to Step 3.
 
 **Inputs required**: If inputs exist, check `inputs.json` for readiness:
 
@@ -154,12 +154,12 @@ After the dry run, offer the user these options:
 
 | Mode | Command | Use When |
 |------|---------|----------|
-| **Dry run + mock inputs** | `mthds-agent pipelex run bundle <bundle-dir>/ --dry-run --mock-inputs` | Quick structural validation, no real data needed, or inputs not ready |
-| **Dry run with real inputs** | `mthds-agent pipelex run bundle <bundle-dir>/ --dry-run` | Validate input shapes without making API calls (auto-detects `inputs.json`) |
-| **Full run** | `mthds-agent pipelex run bundle <bundle-dir>/` | Production execution (auto-detects `inputs.json`) |
-| **Full run inline** | `mthds-agent pipelex run bundle <bundle-dir>/ --inputs '{"theme": ...}'` | Quick execution with inline JSON inputs |
-| **Full run without graph** | `mthds-agent pipelex run bundle <bundle-dir>/ --no-graph` | Execute without generating graph visualization |
-| **Full run with memory** | `mthds-agent pipelex run bundle <bundle-dir>/ --with-memory` | When piping output to another method |
+| **Dry run + mock inputs** | `mthds-agent run bundle <bundle-dir>/ --dry-run --mock-inputs` | Quick structural validation, no real data needed, or inputs not ready |
+| **Dry run with real inputs** | `mthds-agent run bundle <bundle-dir>/ --dry-run` | Validate input shapes without making API calls (auto-detects `inputs.json`) |
+| **Full run** | `mthds-agent run bundle <bundle-dir>/` | Production execution (auto-detects `inputs.json`) |
+| **Full run inline** | `mthds-agent run bundle <bundle-dir>/ --inputs '{"theme": ...}'` | Quick execution with inline JSON inputs |
+| **Full run without graph** | `mthds-agent run bundle <bundle-dir>/ --no-graph` | Execute without generating graph visualization |
+| **Full run with memory** | `mthds-agent run bundle <bundle-dir>/ --with-memory` | When piping output to another method |
 
 > **Graph by default**: Execution graphs (`live_run.html` / `dry_run.html`) are now generated automatically. Use `--no-graph` to disable.
 
@@ -169,10 +169,10 @@ The `--inputs` flag accepts both file paths and inline JSON. The CLI auto-detect
 
 ```bash
 # Inline JSON
-mthds-agent pipelex run bundle <bundle-dir>/ --inputs '{"theme": {"concept": "native.Text", "content": {"text": "nature"}}}'
+mthds-agent run bundle <bundle-dir>/ --inputs '{"theme": {"concept": "native.Text", "content": {"text": "nature"}}}'
 
 # File path (auto-detected in directory mode)
-mthds-agent pipelex run bundle <bundle-dir>/
+mthds-agent run bundle <bundle-dir>/
 ```
 
 ### Step 4: Present Results
@@ -259,7 +259,7 @@ else:
 When encountering runtime errors, re-run with `--log-level debug` for additional context:
 
 ```bash
-mthds-agent --log-level debug pipelex run bundle <bundle-dir>/ --inputs data.json
+mthds-agent --log-level debug run bundle <bundle-dir>/ --inputs data.json
 ```
 
 For all error types and recovery strategies, see [Error Handling Reference](../shared/error-handling.md).
@@ -269,7 +269,7 @@ For all error types and recovery strategies, see [Error Handling Reference](../s
 Execution graph visualizations are generated by default alongside the run output. Use `--no-graph` to disable.
 
 ```bash
-mthds-agent pipelex run bundle <bundle-dir>/
+mthds-agent run bundle <bundle-dir>/
 ```
 
 Graph files (`live_run.html` / `dry_run.html`) are written to disk next to the bundle. Their paths appear in runtime logs on stderr, not in compact stdout. When using `--with-memory`, `graph_files` is included in the returned JSON envelope.
@@ -279,9 +279,9 @@ Graph files (`live_run.html` / `dry_run.html`) are written to disk next to the b
 The run command accepts piped JSON on stdin when `--inputs` is not provided. This enables chaining methods:
 
 ```bash
-mthds-agent pipelex run method extract-terms --inputs data.json --with-memory \
-  | mthds-agent pipelex run method assess-risk --with-memory \
-  | mthds-agent pipelex run method generate-report
+mthds-agent run method extract-terms --inputs data.json --with-memory \
+  | mthds-agent run method assess-risk --with-memory \
+  | mthds-agent run method generate-report
 ```
 
 When methods are installed as CLI shims, the same chain is:

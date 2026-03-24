@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # PostToolUse hook: lint, format, and validate .mthds files after Write/Edit
 # Reads tool_input JSON from stdin, then runs (in order):
-#   1. plxt lint                  — TOML/schema-level linting (blocks on errors)
-#   2. plxt fmt                   — auto-format the file (only if lint passes)
-#   3. mthds-agent pipelex validate bundle — semantic validation (blocks or warns)
-# Blocks if plxt or mthds-agent is not installed. Passes silently if file is not .mthds.
+#   1. mthds-agent plxt lint     — TOML/schema-level linting (blocks on errors)
+#   2. mthds-agent plxt fmt      — auto-format the file (only if lint passes)
+#   3. mthds-agent validate bundle — semantic validation (blocks or warns)
+# Passes silently if mthds-agent is not installed or file is not .mthds.
 
 set -euo pipefail
 
@@ -17,13 +17,8 @@ if [[ -z "$FILE_PATH" || "$FILE_PATH" != *.mthds || ! -f "$FILE_PATH" ]]; then
   exit 0
 fi
 
-# --- Require plxt and mthds-agent on PATH ---
-MISSING=""
-command -v plxt &>/dev/null || MISSING="plxt (install via: uv tool install pipelex-tools)"
-command -v mthds-agent &>/dev/null || MISSING="${MISSING:+$MISSING, }mthds-agent (install via: npm install -g mthds)"
-if [[ -n "$MISSING" ]]; then
-  jq -n --arg reason "Missing required CLI tool(s): $MISSING" \
-    '{"decision":"block","reason":$reason}'
+# --- Require mthds-agent on PATH ---
+if ! command -v mthds-agent &>/dev/null; then
   exit 0
 fi
 
@@ -32,10 +27,10 @@ TMPERR=$(mktemp)
 trap 'rm -f "$TMPOUT" "$TMPERR"' EXIT
 
 # =====================================================================
-# STAGE 1: plxt lint — TOML/schema-level linting
+# STAGE 1: mthds-agent plxt lint — TOML/schema-level linting
 # =====================================================================
 LINT_EXIT=0
-plxt lint --quiet "$FILE_PATH" >"$TMPOUT" 2>"$TMPERR" || LINT_EXIT=$?
+mthds-agent plxt lint --quiet "$FILE_PATH" >"$TMPOUT" 2>"$TMPERR" || LINT_EXIT=$?
 
 if [[ "$LINT_EXIT" -ne 0 ]]; then
   LINT_OUTPUT=$(cat "$TMPERR")
@@ -49,17 +44,17 @@ $LINT_OUTPUT" \
 fi
 
 # =====================================================================
-# STAGE 2: plxt fmt — auto-format the file in-place (lint passed)
+# STAGE 2: mthds-agent plxt fmt — auto-format the file in-place (lint passed)
 # =====================================================================
-plxt fmt "$FILE_PATH" >"$TMPOUT" 2>"$TMPERR" || true
+mthds-agent plxt fmt "$FILE_PATH" >"$TMPOUT" 2>"$TMPERR" || true
 
 # =====================================================================
-# STAGE 3: mthds-agent pipelex validate bundle — semantic validation
+# STAGE 3: mthds-agent validate bundle — semantic validation
 # =====================================================================
 PARENT_DIR=$(dirname "$FILE_PATH")
 
 EXIT_CODE=0
-mthds-agent pipelex validate bundle "$FILE_PATH" -L "$PARENT_DIR/" >"$TMPOUT" 2>"$TMPERR" || EXIT_CODE=$?
+mthds-agent validate bundle "$FILE_PATH" -L "$PARENT_DIR/" >"$TMPOUT" 2>"$TMPERR" || EXIT_CODE=$?
 
 # --- Parse results ---
 if [[ "$EXIT_CODE" -eq 0 ]]; then

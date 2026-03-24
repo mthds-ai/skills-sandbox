@@ -5,7 +5,7 @@ Each native concept maps to a content class with specific attributes. Understand
 - Writing `$var.field` references in prompts or PipeCompose templates
 - Building `construct` blocks with `from = "input.field"`
 - Interpreting pipeline outputs (e.g., what comes out of PipeExtract)
-- Preparing input JSON for `mthds-agent pipelex run`
+- Preparing input JSON for `mthds-agent run`
 
 ## Content Type Summary
 
