@@ -90,6 +90,41 @@ Do not write `.mthds` files manually, do not scan for existing methods, do not d
 
 ---
 
+## Existing Method Detection
+
+**Goal**: Before starting a new build, check whether the project already contains methods that overlap with the user's request.
+
+**When to check**: Always, before entering automatic or interactive mode — with these exceptions:
+
+- **Skip entirely** if the user's request signals intent to create something new. This includes phrases like "new method", "a new method", "brand new", "from scratch", "create a method", or similar.
+- **Targeted search** if the user references a specific existing method by name or path, search specifically for that method instead of scanning broadly. If the specific method cannot be found, fall back to the general search approach below.
+
+For the general case, scan `mthds-wip/` and any other directories containing `.mthds` files in the project.
+
+**How to check**:
+1. List all `.mthds` files in the project (glob for `**/*.mthds`)
+2. For each file found, read the file header (domain, main pipe code, description) to understand what it does
+3. Compare with the user's current request — look for overlap in topic, domain, or purpose
+
+**If no existing methods overlap**: Proceed normally with the build.
+
+**If one or more existing methods overlap**, present the user with three options:
+
+> I found an existing method that seems related to what you're asking for:
+> - **`<path/to/bundle.mthds>`** — *<brief description of what it does>*
+>
+> How would you like to proceed?
+> 1. **Start fresh** — Create a wholly new method from scratch (ignoring the existing one)
+> 2. **Use the existing method** — It already does what you need; cancel this build
+> 3. **Build upon it** — Extend the existing method by adding pipes before or after the current flow
+
+**Handling each choice**:
+- **Start fresh**: Proceed with the build as normal (automatic or interactive path below).
+- **Use the existing method**: End the build. Remind the user they can run it with `/mthds-run` and point them to its `inputs.json` if available.
+- **Build upon it**: Switch to the /mthds-edit skill, framing the task as an extension — ask the user what additional processing they want to add (e.g., a preprocessing step before the main pipe, a postprocessing step after, or additional parallel branches). Pass the existing `.mthds` file path to the edit workflow.
+
+---
+
 ## Phase 1: Understand Requirements
 
 **Goal**: Gather complete information before planning.
@@ -156,14 +191,14 @@ Each native concept has accessible attributes (e.g., `Image` has `url`, `public_
 
 **Goal**: Convert concept drafts to validated TOML using the CLI.
 
-Prepare JSON specs for all concepts, then convert them **in parallel** by making multiple concurrent tool calls. Each command outputs validated TOML directly — keep the output in context for assembly in Phase 8.
+Prepare JSON specs for all concepts, then convert them **in parallel** by making multiple concurrent tool calls.
 
 **Example** (3 concepts converted in parallel):
 ```bash
 # Call all three in parallel (single response, multiple tool calls):
-mthds-agent pipelex concept --spec '{"the_concept_code": "Invoice", "description": "A commercial invoice document", "structure": {"invoice_number": "The unique identifier", "vendor_name": {"type": "text", "description": "Vendor name", "required": true}, "total_amount": {"type": "number", "description": "Total amount", "required": true}}}'
-mthds-agent pipelex concept --spec '{"the_concept_code": "LineItem", "description": "A single line item on an invoice", "structure": {"description": "Item description", "quantity": {"type": "integer", "required": true}, "unit_price": {"type": "number", "required": true}}}'
-mthds-agent pipelex concept --spec '{"the_concept_code": "Summary", "description": "A text summary of content", "refines": "Text"}'
+mthds-agent concept --spec '{"the_concept_code": "Invoice", "description": "A commercial invoice document", "structure": {"invoice_number": "The unique identifier", "vendor_name": {"type": "text", "description": "Vendor name", "required": true}, "total_amount": {"type": "number", "description": "Total amount", "required": true}}}'
+mthds-agent concept --spec '{"the_concept_code": "LineItem", "description": "A single line item on an invoice", "structure": {"description": "Item description", "quantity": {"type": "integer", "required": true}, "unit_price": {"type": "number", "required": true}}}'
+mthds-agent concept --spec '{"the_concept_code": "Summary", "description": "A text summary of content", "refines": "Text"}'
 ```
 
 **Field types**: `text`, `integer`, `boolean`, `number`, `date`, `concept`, `list`
@@ -181,9 +216,9 @@ field = {type = "concept", concept_ref = "my_domain.OtherConcept", description =
 items = {type = "list", item_type = "concept", item_concept_ref = "my_domain.OtherConcept", description = "..."}
 ```
 
-**Output**: Validated concept TOML (raw TOML output, held in context for Phase 8)
+**Output**: Validated concept TOML fragments
 
-> **Partial failures**: If some commands fail, fix the failing specs using the error message (`error_domain: "input"` means the spec is wrong). Re-run only the failed commands.
+> **Partial failures**: If some commands fail, fix the failing specs using the error JSON (`error_domain: "input"` means the spec is wrong). Re-run only the failed commands.
 
 ---
 
@@ -211,6 +246,8 @@ items = {type = "list", item_type = "concept", item_concept_ref = "my_domain.Oth
 | **PipeSearch** | Search the web for information → SearchResult |
 | **PipeFunc** | Custom Python logic |
 
+> **Critical — PipeCondition requires a `default_outcome` field**: The `default_outcome` field is **required** for PipeCondition, even when the outcomes appear exhaustive (e.g., a boolean-like `"yes"`/`"no"` split). Set it to `"continue"` to pass the output through unchanged, or to one of the outcome pipes as a safe default.
+
 > **Critical — PipeImgGen requires a `prompt` field**: The `prompt` field is **required** for PipeImgGen. It is a template that defines the text sent to the image generation model — use `$variable` syntax to insert inputs. Examples:
 > - Direct passthrough: `prompt = "$img_prompt"` — uses the input as-is
 > - Template with context: `prompt = "A black and white sketch of $description"` — wraps the input in a richer prompt
@@ -237,6 +274,7 @@ Check:
 - [ ] PipeBatch: `input_item_name` (singular) differs from `input_list_name` (plural) and all `inputs` keys
 - [ ] PipeSequence batch steps: `batch_as` (singular) differs from `batch_over` (plural)
 - [ ] PipeSequence batch steps: `batch_over` supports dotted paths for nested attributes (e.g., `"search_result.sources"` to iterate over sources inside a SearchResult)
+- [ ] PipeCondition has a `default_outcome` — required even when outcomes seem exhaustive
 - [ ] PipeImgGen has a `prompt` field (template that references inputs, e.g., `prompt = "$description"` or `prompt = "A watercolor painting of $subject"`) — required even when the input IS the prompt
 - [ ] PipeImgGen inputs are text-compatible (add PipeLLM if needed to craft the prompt first)
 - [ ] No circular dependencies
@@ -251,10 +289,10 @@ Check:
 
 Use **talent names** (left column) from [Talents and Presets](references/talents-and-presets.md). Do NOT use model preset names (right column, prefixed with `$` or `@`) — those are internal identifiers. For example, use `creative-writer`, not `writing-creative` or `$writing-creative`. Only look up specific model presets when the user has explicit instructions about model choice. In all cases, verify that referenced presets exist:
 ```bash
-mthds-agent pipelex models --type llm          # when structuring PipeLLM pipes
-mthds-agent pipelex models --type extract      # when structuring PipeExtract pipes
-mthds-agent pipelex models --type img_gen      # when structuring PipeImgGen pipes
-mthds-agent pipelex models --type search       # when structuring PipeSearch pipes
+mthds-agent models --type llm          # when structuring PipeLLM pipes
+mthds-agent models --type extract      # when structuring PipeExtract pipes
+mthds-agent models --type img_gen      # when structuring PipeImgGen pipes
+mthds-agent models --type search       # when structuring PipeSearch pipes
 ```
 
 Prepare JSON specs for all pipes, then convert them **in parallel** by making multiple concurrent tool calls.
@@ -265,9 +303,9 @@ Prepare JSON specs for all pipes, then convert them **in parallel** by making mu
 
 For detailed CLI examples for each pipe type (PipeLLM, PipeSequence, PipeBatch, PipeCondition, PipeCompose, PipeParallel, PipeExtract, PipeImgGen, PipeSearch), see [Manual Build Phases](references/manual-build-phases.md#phase-7-pipe-type-cli-examples).
 
-**Output**: Validated pipe TOML (raw TOML output, held in context for Phase 8)
+**Output**: Validated pipe TOML fragments
 
-> **Partial failures**: Fix failing specs using the error message. Re-run only the failed commands.
+> **Partial failures**: Fix failing specs using the error JSON. Re-run only the failed commands.
 
 ---
 
@@ -280,27 +318,23 @@ For detailed CLI examples for each pipe type (PipeLLM, PipeSequence, PipeBatch, 
 **Procedure**:
 
 1. **Create the output directory**: `mkdir -p mthds-wip/<bundle_dir>/`
-2. **Compose the `.mthds` file** by combining the CLI-validated TOML fragments from Phases 4 and 7 (this is deterministic assembly, not manual authoring), using this structure:
+2. **Save concept TOML** from Phase 4 to `mthds-wip/<bundle_dir>/concepts.toml` using the **Write** tool
+3. **Save pipe TOML** from Phase 7 to `mthds-wip/<bundle_dir>/pipes.toml` using the **Write** tool
+4. **Run assemble** with file paths (not inline content):
+   ```bash
+   mthds-agent assemble \
+     --domain <domain> \
+     --main-pipe <main_pipe_code> \
+     --description "<description>" \
+     --concepts mthds-wip/<bundle_dir>/concepts.toml \
+     --pipes mthds-wip/<bundle_dir>/pipes.toml
+   ```
+5. **Parse the `toml` field** from the JSON response and save it using the **Write** tool to `mthds-wip/<bundle_dir>/bundle.mthds` — this triggers the PostToolUse hook for automatic lint/format/validate.
+6. **Clean up** the intermediate files (`concepts.toml`, `pipes.toml`) — they are no longer needed.
 
-```toml
-domain = "<domain>"
-description = "<description>"
-main_pipe = "<main_pipe_code>"
+**IMPORTANT**: Never pass TOML content inline via process substitution or heredocs. Always write to files first, then pass file paths to the CLI.
 
-# Concept TOML from Phase 4
-[concept.MyInput]
-# ...
-
-# Pipe TOML from Phase 7
-[pipe.main_pipe_code]
-# ...
-```
-
-3. **Write the file** using the **Write** tool to `mthds-wip/<bundle_dir>/bundle.mthds` — this triggers the PostToolUse hook for automatic lint/format/validate.
-
-No intermediate files are needed. The `concept --spec` and `pipe --spec` commands (Phases 4 and 7) already validated each fragment — assembly is just combining them with the bundle header.
-
-For the full `.mthds` file structure, see [Manual Build Phases](references/manual-build-phases.md#phase-8-assemble-bundle).
+For additional examples, see [Manual Build Phases](references/manual-build-phases.md#phase-8-assemble-bundle).
 
 ---
 
@@ -312,10 +346,10 @@ Always use `-L` pointing to the bundle's own directory to avoid namespace collis
 
 ```bash
 # Validate and generate flowchart (isolated from other bundles)
-mthds-agent pipelex validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/ --graph
+mthds-agent validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/ --graph
 
 # Generate example inputs
-mthds-agent pipelex inputs bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
+mthds-agent inputs bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
 ```
 
 On success, `dry_run.html` is saved next to the bundle. The JSON output includes the path in `graph_files`.
@@ -323,7 +357,7 @@ On success, `dry_run.html` is saved next to the bundle. The JSON output includes
 Fix any validation errors and re-validate. If validation fails unexpectedly or errors are unclear, re-run with `--log-level debug` for additional context:
 
 ```bash
-mthds-agent --log-level debug pipelex validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
+mthds-agent --log-level debug validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
 ```
 
 ---
@@ -336,7 +370,7 @@ After validation passes (Phase 9), generate the input template:
 
 ```bash
 # Input template (extracts the input schema as JSON)
-mthds-agent pipelex inputs bundle <mthds_file> -L <output_dir>/
+mthds-agent inputs bundle <mthds_file> -L <output_dir>/
 ```
 
 Replace `<mthds_file>` and `<output_dir>` with actual paths from the build output.
