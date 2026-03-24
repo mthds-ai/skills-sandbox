@@ -145,6 +145,8 @@ mthds-agent pipe --spec '{
 }'
 ```
 
+> **Note**: The `default_outcome` field is **required** for PipeCondition, even when the outcomes appear exhaustive (e.g., a boolean-like `"yes"`/`"no"` split). It specifies the fallback pipe when no outcome matches. Set it to `"continue"` to pass the output through unchanged, or to one of the outcome pipes as a safe default.
+
 ### PipeCompose — Template mode (via CLI)
 ```bash
 mthds-agent pipe --spec '{

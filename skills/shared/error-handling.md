@@ -45,7 +45,7 @@ When retrying a command after an error, increase the log level to capture diagno
 
 ```bash
 # Debug output for troubleshooting
-mthds-agent --log-level debug pipelex validate bundle bundle.mthds -L dir/
+mthds-agent --log-level debug validate bundle bundle.mthds -L dir/
 ```
 
 `--log-level debug` adds context on what the CLI is doing — internal resolution steps, model routing details, and validation traces — without overwhelming output.

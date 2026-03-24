@@ -132,7 +132,7 @@ mthds-agent validate bundle <file>.mthds -L <bundle-directory>/ --graph
 If the fix-validate loop gets stuck or errors are unclear, re-run with `--log-level debug` for additional context:
 
 ```bash
-mthds-agent --log-level debug pipelex validate bundle <file>.mthds -L <bundle-directory>/
+mthds-agent --log-level debug validate bundle <file>.mthds -L <bundle-directory>/
 ```
 
 ### Step 5: Report Results

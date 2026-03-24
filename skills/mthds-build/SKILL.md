@@ -246,6 +246,8 @@ items = {type = "list", item_type = "concept", item_concept_ref = "my_domain.Oth
 | **PipeSearch** | Search the web for information → SearchResult |
 | **PipeFunc** | Custom Python logic |
 
+> **Critical — PipeCondition requires a `default_outcome` field**: The `default_outcome` field is **required** for PipeCondition, even when the outcomes appear exhaustive (e.g., a boolean-like `"yes"`/`"no"` split). Set it to `"continue"` to pass the output through unchanged, or to one of the outcome pipes as a safe default.
+
 > **Critical — PipeImgGen requires a `prompt` field**: The `prompt` field is **required** for PipeImgGen. It is a template that defines the text sent to the image generation model — use `$variable` syntax to insert inputs. Examples:
 > - Direct passthrough: `prompt = "$img_prompt"` — uses the input as-is
 > - Template with context: `prompt = "A black and white sketch of $description"` — wraps the input in a richer prompt
@@ -272,6 +274,7 @@ Check:
 - [ ] PipeBatch: `input_item_name` (singular) differs from `input_list_name` (plural) and all `inputs` keys
 - [ ] PipeSequence batch steps: `batch_as` (singular) differs from `batch_over` (plural)
 - [ ] PipeSequence batch steps: `batch_over` supports dotted paths for nested attributes (e.g., `"search_result.sources"` to iterate over sources inside a SearchResult)
+- [ ] PipeCondition has a `default_outcome` — required even when outcomes seem exhaustive
 - [ ] PipeImgGen has a `prompt` field (template that references inputs, e.g., `prompt = "$description"` or `prompt = "A watercolor painting of $subject"`) — required even when the input IS the prompt
 - [ ] PipeImgGen inputs are text-compatible (add PipeLLM if needed to craft the prompt first)
 - [ ] No circular dependencies
@@ -354,7 +357,7 @@ On success, `dry_run.html` is saved next to the bundle. The JSON output includes
 Fix any validation errors and re-validate. If validation fails unexpectedly or errors are unclear, re-run with `--log-level debug` for additional context:
 
 ```bash
-mthds-agent --log-level debug pipelex validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
+mthds-agent --log-level debug validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
 ```
 
 ---
