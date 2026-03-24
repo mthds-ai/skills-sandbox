@@ -44,7 +44,11 @@ When a user needs to run methods with live inference, direct them to `/mthds-pip
 
 ## Agent CLI
 
-Agents must use `mthds-agent` exclusively. It outputs structured JSON (stdout=success, stderr=error with exit code 1).
+Agents must use `mthds-agent` exclusively. Output format varies by command:
+- **JSON on stdout**: `run`, `validate`, `inputs`, `init`, `install`, `package` commands
+- **Raw TOML on stdout**: `concept`, `pipe` commands (return TOML directly, not wrapped in JSON)
+- **Markdown on stdout**: `models`, `doctor` commands (human/LLM-readable by default)
+- **Errors**: JSON on stderr with exit code 1 (except `plxt` passthrough commands which emit raw text — see command table)
 
 ## Global Options
 
@@ -52,25 +56,20 @@ These options apply to **all** `mthds-agent` commands and must appear **before**
 
 | Option | Values | Default | Description |
 |--------|--------|---------|-------------|
-| `--runner` | `pipelex`, `api` | default runner | Selects which runner to use for the command |
 | `--log-level` | `debug`, `info`, `warning`, `error`, `critical` | `warning` | Controls verbosity of diagnostic output on stderr |
 | `--version` | — | — | Print version and exit |
 
-By default, commands use whichever runner was configured via `mthds-agent runner setup`. Use `--runner` to override:
-
+Examples:
 ```bash
-# Use the API runner explicitly
-mthds-agent --runner api run bundle <bundle-dir>/
-
-# Use the local pipelex runner explicitly
-mthds-agent --runner pipelex validate bundle bundle.mthds -L dir/
+# Debug: additional context on what the CLI is doing
+mthds-agent --log-level debug pipelex validate bundle bundle.mthds -L dir/
 ```
 
 When diagnosing failures, use `--log-level debug` to get additional context — internal resolution steps, model routing details, and validation traces.
 
 ## Building Methods
 
-Use the /mthds-build skill for a guided 10-phase process: requirements → plan → concepts → structure → flow → review → pipes → assemble → validate → deliver. Refine with /mthds-edit and /mthds-fix if the result needs adjustments.
+Use the /mthds-build skill for a guided 10-phase process: requirements → plan → concepts → structure → flow → review → pipes → assemble → validate → deliver. The concept and pipe CLI commands validate and return raw TOML; assembly is done by composing the fragments directly into the `.mthds` file. Refine with /mthds-edit and /mthds-fix if the result needs adjustments.
 
 ## The Iterative Development Loop
 
@@ -86,14 +85,14 @@ Use the /mthds-build skill for a guided 10-phase process: requirements → plan 
                ▼                                       │
     ┌──────────────────────┐     ┌──────────────┐      │
     │  Validate            │────►│  Fix errors  │──────┘
-    │  mthds-agent │ err │  /mthds-fix  │
+    │  mthds-agent pipelex │ err │  /mthds-fix  │
     │  validate file.mthds │     └──────────────┘
     └──────────┬───────────┘
                │ ok
                ▼
     ┌────────────────────────┐
     │  Run                   │
-    │  mthds-agent   │
+    │  mthds-agent pipelex   │
     │  run bundle file.mthds │
     └──────────┬─────────────┘
               │
@@ -108,7 +107,7 @@ Use the /mthds-build skill for a guided 10-phase process: requirements → plan 
 
 ### Success Format
 
-The `mthds-agent run bundle` command has two output modes:
+The `mthds-agent pipelex run bundle` command has two output modes:
 
 **Compact (default)**: The concept's structured JSON is emitted directly — no envelope, no metadata:
 
@@ -150,14 +149,14 @@ For all error types, recovery strategies, and error domains, see [Error Handling
 
 ### `--inputs` Flag
 
-The `--inputs` flag on `mthds-agent run bundle` accepts **both** file paths and inline JSON. The CLI auto-detects: if the value starts with `{`, it is parsed as JSON directly.
+The `--inputs` flag on `mthds-agent pipelex run bundle` accepts **both** file paths and inline JSON. The CLI auto-detects: if the value starts with `{`, it is parsed as JSON directly.
 
 ```bash
 # File path
-mthds-agent run bundle bundle.mthds --inputs inputs.json
+mthds-agent pipelex run bundle bundle.mthds --inputs inputs.json
 
 # Inline JSON (no file creation needed)
-mthds-agent run bundle bundle.mthds --inputs '{"theme": {"concept": "native.Text", "content": {"text": "nature"}}}'
+mthds-agent pipelex run bundle bundle.mthds --inputs '{"theme": {"concept": "native.Text", "content": {"text": "nature"}}}'
 ```
 
 Inline JSON is the fastest path for agents — skip file creation for simple inputs.
@@ -167,7 +166,7 @@ Inline JSON is the fastest path for agents — skip file creation for simple inp
 When `--inputs` is not provided and stdin is not a TTY (i.e., data is piped), JSON is read from stdin:
 
 ```bash
-echo '{"text": {"concept": "native.Text", "content": {"text": "hello"}}}' | mthds-agent run bundle <bundle-dir>/
+echo '{"text": {"concept": "native.Text", "content": {"text": "hello"}}}' | mthds-agent pipelex run bundle <bundle-dir>/
 ```
 
 **`--inputs` always takes priority** over stdin. If both are present, stdin is ignored.
@@ -179,9 +178,9 @@ When stdin contains a `working_memory` key (from upstream `--with-memory` output
 Methods can be chained via Unix pipes using `--with-memory` to pass the full working memory between steps:
 
 ```bash
-mthds-agent run method extract-terms --inputs data.json --with-memory \
-  | mthds-agent run method assess-risk --with-memory \
-  | mthds-agent run method generate-report
+mthds-agent pipelex run method extract-terms --inputs data.json --with-memory \
+  | mthds-agent pipelex run method assess-risk --with-memory \
+  | mthds-agent pipelex run method generate-report
 ```
 
 When methods are installed as CLI shims, the same chain is:
@@ -222,10 +221,10 @@ Pipelex loads `.mthds` files into a flat namespace. When multiple bundles exist 
 
 ```bash
 # Validate (isolated)
-mthds-agent validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
+mthds-agent pipelex validate bundle mthds-wip/pipeline_01/bundle.mthds -L mthds-wip/pipeline_01/
 
 # Run (directory mode: auto-detects bundle, inputs, and -L)
-mthds-agent run bundle mthds-wip/pipeline_01/
+mthds-agent pipelex run bundle mthds-wip/pipeline_01/
 ```
 
 Without `-L` (or directory mode for `run`), commands will load all `.mthds` files in the default search paths, which can cause name collisions between bundles.
@@ -243,7 +242,7 @@ mthds-agent package init --address github.com/org/repo --version 1.0.0 --descrip
 mthds-agent package validate -C mthds-wip/restaurant_presenter/
 ```
 
-> **Note**: `mthds-agent package validate` validates the `METHODS.toml` package manifest — not `.mthds` bundle semantics. For bundle validation, use `mthds-agent validate bundle`.
+> **Note**: `mthds-agent package validate` validates the `METHODS.toml` package manifest — not `.mthds` bundle semantics. For bundle validation, use `mthds-agent pipelex validate bundle`.
 
 ## Generating Visualizations
 
@@ -251,10 +250,10 @@ Agents can generate execution graph visualizations for human review.
 
 ### Validation Graphs
 
-The `--graph` flag on `mthds-agent validate bundle` generates an interactive HTML flowchart (`dry_run.html`) next to the bundle — the fastest way to visualize method structure (no API keys or backends needed).
+The `--graph` flag on `mthds-agent pipelex validate bundle` generates an interactive HTML flowchart (`dry_run.html`) next to the bundle — the fastest way to visualize method structure (no API keys or backends needed).
 
 ```bash
-mthds-agent validate bundle bundle.mthds -L dir/ --graph
+mthds-agent pipelex validate bundle bundle.mthds -L dir/ --graph
 ```
 
 Additional options:
@@ -265,10 +264,10 @@ The JSON output includes `graph_files` with the paths to generated files.
 
 ### Execution Graphs
 
-Execution graph visualizations are generated by default with every `mthds-agent run bundle` command. Use `--no-graph` to disable.
+Execution graph visualizations are generated by default with every `mthds-agent pipelex run bundle` command. Use `--no-graph` to disable.
 
 ```bash
-mthds-agent run bundle <bundle-dir>/
+mthds-agent pipelex run bundle <bundle-dir>/
 ```
 
 Graph files (`live_run.html` / `dry_run.html`) are written to disk next to the bundle. Their paths appear in runtime logs on stderr, not in compact stdout. When using `--with-memory`, `graph_files` is included in the returned JSON envelope.
@@ -277,15 +276,14 @@ Graph files (`live_run.html` / `dry_run.html`) are written to disk next to the b
 
 | Command | Purpose | Example |
 |---------|---------|---------|
-| `mthds-agent init` | Initialize pipelex configuration (non-interactive) | `mthds-agent init -g --config '{"backends": ["openai"]}'` |
-| `mthds-agent run bundle` | Execute a pipeline (compact output by default; use `--with-memory` for full envelope) | `mthds-agent run bundle <bundle-dir>/` |
-| `mthds-agent validate bundle` | Validate a bundle (use `--graph` to generate flowchart HTML) | `mthds-agent validate bundle bundle.mthds --graph` |
-| `mthds-agent inputs bundle` | Generate example input JSON | `mthds-agent inputs bundle bundle.mthds` |
-| `mthds-agent concept` | Structure a concept from JSON spec | `mthds-agent concept --spec '{...}'` |
-| `mthds-agent pipe` | Structure a pipe from JSON spec (field names: `type`, `pipe_code`, `llm_talent`/`extract_talent`/`img_gen_talent`/`search_talent`). Use talent names (e.g., `creative-writer`), not preset names (e.g., `$writing-creative`) | `mthds-agent pipe --spec '{"type": "PipeLLM", "pipe_code": "my_pipe", "llm_talent": "creative-writer", ...}'` |
-| `mthds-agent assemble` | Assemble a .mthds bundle from parts (returns TOML in JSON by default; use `--output` to write to file) | `mthds-agent assemble --domain my_domain ...` |
-| `mthds-agent models` | List available model presets and talent mappings | `mthds-agent models` / `mthds-agent models -t llm -b anthropic` / `mthds-agent models -t search` |
-| `mthds-agent doctor` | Check config health and auto-fix | `mthds-agent doctor` |
+| `mthds-agent pipelex init` | Initialize pipelex configuration (non-interactive) | `mthds-agent pipelex init -g --config '{"backends": ["openai"]}'` |
+| `mthds-agent pipelex run bundle` | Execute a pipeline (compact output by default; use `--with-memory` for full envelope) | `mthds-agent pipelex run bundle <bundle-dir>/` |
+| `mthds-agent pipelex validate bundle` | Validate a bundle (use `--graph` to generate flowchart HTML) | `mthds-agent pipelex validate bundle bundle.mthds --graph` |
+| `mthds-agent pipelex inputs bundle` | Generate example input JSON | `mthds-agent pipelex inputs bundle bundle.mthds` |
+| `mthds-agent pipelex concept` | Validate and structure a concept from JSON spec (returns raw TOML) | `mthds-agent pipelex concept --spec '{...}'` |
+| `mthds-agent pipelex pipe` | Validate and structure a pipe from JSON spec (returns raw TOML). Field names: `type`, `pipe_code`, `llm_talent`/`extract_talent`/`img_gen_talent`/`search_talent`. Use talent names (e.g., `creative-writer`), not preset names (e.g., `$writing-creative`) | `mthds-agent pipelex pipe --spec '{"type": "PipeLLM", "pipe_code": "my_pipe", "llm_talent": "creative-writer", ...}'` |
+| `mthds-agent pipelex models` | List available model presets and talent mappings (outputs markdown) | `mthds-agent pipelex models` / `mthds-agent pipelex models -t llm -b anthropic` / `mthds-agent pipelex models -t search` |
+| `mthds-agent pipelex doctor` | Check config health and auto-fix (outputs markdown) | `mthds-agent pipelex doctor` |
 | `mthds-agent install` | Install a method package from GitHub or local directory | `mthds-agent install org/repo --agent claude-code --location local` |
 | `mthds-agent package init` | Initialize METHODS.toml | `mthds-agent package init --address github.com/org/repo --version 1.0.0 --description "desc" -C <pkg-dir>` |
 | `mthds-agent package list` | Display package manifest | `mthds-agent package list -C <pkg-dir>` |

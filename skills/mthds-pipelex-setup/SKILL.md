@@ -54,7 +54,7 @@ Wait for confirmation, then proceed.
 
 ### Step 2 — Assess Current State
 
-Run `mthds-agent doctor` to check the current configuration health.
+Run `mthds-agent pipelex doctor` (outputs markdown) to check the current configuration health.
 
 - **If healthy** (backends configured, credentials valid): Tell the user their setup is already complete. Suggest trying `/run` on a method.
 - **If issues found**: Show the doctor output and proceed to Step 3 to fix them.
@@ -68,14 +68,14 @@ Ask the user which backends they want to configure. Two paths:
 The Pipelex Gateway provides access to multiple AI models through a single API key.
 
 1. Ask the user: "Do you accept the Pipelex Gateway Terms of Service and Privacy Policy? See: https://www.pipelex.com/privacy-policy"
-2. If they accept: run `mthds-agent login` to log in to Pipelex and configure the `PIPELEX_GATEWAY_API_KEY`. This command handles authentication and key setup automatically.
+2. If they accept: run `mthds-agent pipelex login` to log in to Pipelex and configure the `PIPELEX_GATEWAY_API_KEY`. This command handles authentication and key setup automatically.
 3. If they decline: proceed with Option B instead
 
 #### Option B — Bring Your Own Key (BYOK)
 
 The user provides their own API keys for individual providers.
 
-1. Ask which providers they want to enable. Common options: `openai`, `anthropic`. Run `mthds-agent init --help` to discover all available backends.
+1. Ask which providers they want to enable. Common options: `openai`, `anthropic`. Run `mthds-agent pipelex init --help` to discover all available backends.
 2. If 2+ backends are selected, ask which should be the `primary_backend`.
 
 ### Step 4 — Telemetry Preference
@@ -93,13 +93,13 @@ Build the JSON config and run:
 
 ```bash
 # Example: Pipelex Gateway (user accepted terms):
-mthds-agent init -g --config '{"backends": ["pipelex_gateway"], "accept_gateway_terms": true, "telemetry_mode": "anonymous"}'
+mthds-agent pipelex init -g --config '{"backends": ["pipelex_gateway"], "accept_gateway_terms": true, "telemetry_mode": "anonymous"}'
 
 # Example: BYOK with OpenAI only:
-mthds-agent init -g --config '{"backends": ["openai"], "telemetry_mode": "off"}'
+mthds-agent pipelex init -g --config '{"backends": ["openai"], "telemetry_mode": "off"}'
 
 # Example: BYOK with multiple backends:
-mthds-agent init -g --config '{"backends": ["openai", "anthropic"], "primary_backend": "anthropic", "telemetry_mode": "off"}'
+mthds-agent pipelex init -g --config '{"backends": ["openai", "anthropic"], "primary_backend": "anthropic", "telemetry_mode": "off"}'
 ```
 
 - `-g` targets the global `~/.pipelex/` directory. Without it, targets project-level `.pipelex/` (requires a project root).
@@ -116,7 +116,7 @@ If the user chose BYOK (Option B), guide them to set environment variables for t
 
 Recommend adding these to their shell profile (`~/.zshrc`, `~/.bashrc`, etc.) for persistence.
 
-After the user confirms they've set the keys, run `mthds-agent doctor` again to verify everything is healthy.
+After the user confirms they've set the keys, run `mthds-agent pipelex doctor` again (outputs markdown) to verify everything is healthy.
 
 ### Step 7 — Confirm Success
 
